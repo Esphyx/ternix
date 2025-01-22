@@ -1,0 +1,9 @@
+[package]
+name = "layer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tetrominos = { path = "../tetrominos" }
+strum = "0.26.3"
+colored = "3.0.0"

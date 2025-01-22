@@ -1,0 +1,22 @@
+[package]
+name = "ternix"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [
+    "logic/layer",
+    "logic/orientation",
+    "logic/piece",
+    "logic/queue",
+    "logic/shapes",
+    "logic/tetrominos",
+]
+
+[dependencies]
+queue = { path = "logic/queue" }
+tetrominos = { path = "logic/tetrominos" }
+piece = { path = "logic/piece" }
+layer = { path = "logic/layer" }
+orientation = { path = "logic/orientation" }
+colored = "3.0.0"

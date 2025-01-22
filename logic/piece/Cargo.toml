@@ -1,0 +1,10 @@
+[package]
+name = "piece"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tetrominos = { path = "../tetrominos" }
+orientation = { path = "../orientation" }
+shapes = { path = "../shapes" }
+strum = "0.26.3"
