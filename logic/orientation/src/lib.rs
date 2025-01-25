@@ -1,107 +1,74 @@
-use std::ops::Sub;
-
 use strum::EnumCount;
-use strum_macros::EnumCount;
 
-#[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq)]
+mod axis;
+mod direction;
+mod polarity;
+mod rotation;
+
+pub use axis::Axis;
+pub use direction::Direction;
+pub use polarity::Polarity;
+pub use rotation::Rotation;
+
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Orientation {
-    direction: Direction,
-    rotation: Rotation,
+    pub direction: Direction,
+    pub rotation: Rotation,
 }
 
-#[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct Direction {
-    pub polarity: Polarity,
-    pub axis: Axis,
-}
+#[cfg(test)]
+mod tests {
+    use crate::{Axis, Direction, Orientation, Polarity, Rotation};
 
-#[derive(Clone, Copy, Debug, Default, EnumCount, Hash, PartialEq, Eq)]
-pub enum Polarity {
-    #[default]
-    Positive,
-    Negative,
-}
+    #[test]
+    pub fn it_works() {
+        let orientation = Orientation::from((
+            Direction::from((Polarity::Positive, Axis::Y)),
+            Rotation::Identity,
+        ));
+        let direction = Direction::from((Polarity::Negative, Axis::Y));
 
-#[derive(Clone, Copy, Debug, Default, EnumCount, Hash, PartialEq, Eq)]
-pub enum Axis {
-    X,
-    #[default]
-    Y,
-    Z,
-}
-
-#[derive(Clone, Copy, Debug, Default, EnumCount, Hash, PartialEq, Eq)]
-pub enum Rotation {
-    #[default]
-    Identity,
-    Generator,
-    Double,
-    Prime,
+        println!("{:?}", orientation.rotate(direction));
+    }
 }
 
 impl Orientation {
     pub fn rotate(&self, along: Direction) -> Self {
-        todo!()
+        let cross = self.direction.cross(along);
+
+        match cross {
+            Some(dir) => {
+                if dir.axis == Axis::Y {
+                    
+                }
+
+                todo!()
+            }
+            None => Self {
+                direction: self.direction,
+                rotation: match self.direction.polarity.cross(along.polarity) {
+                    Polarity::Positive => self.rotation.next(),
+                    Polarity::Negative => self.rotation.previous(),
+                },
+            },
+        }
     }
 
     pub fn combination(&self) -> usize {
         self.rotation as usize + self.direction.combination() * Rotation::COUNT
     }
+}
 
-    #[inline]
-    pub const fn count() -> usize {
-        Direction::count() * Rotation::COUNT
+impl From<(Direction, Rotation)> for Orientation {
+    fn from(value: (Direction, Rotation)) -> Self {
+        let (direction, rotation) = value;
+        Self {
+            direction,
+            rotation,
+        }
     }
 }
 
-impl Direction {
-    pub fn rotate_coordinate(
-        &self,
-        coordinate: [usize; Axis::COUNT],
-        original_dimensions: [usize; Axis::COUNT],
-    ) -> [usize; Axis::COUNT] {
-        let Self { axis, polarity } = self;
-
-        let [x, y, z] = coordinate;
-        let [x_size, y_size, z_size] = original_dimensions;
-
-        // rotates counter clockwise while looking in the direction
-        match (axis, polarity) {
-            (Axis::X, Polarity::Positive) => [x, y_size - z - 1, y],
-            (Axis::X, Polarity::Negative) => [x, z, z_size - y - 1],
-            (Axis::Y, Polarity::Positive) => [x_size - z - 1, y, x],
-            (Axis::Y, Polarity::Negative) => [z, y, z_size - x - 1],
-            (Axis::Z, Polarity::Positive) => [x_size - y - 1, x, z],
-            (Axis::Z, Polarity::Negative) => [y, y_size - x - 1, z],
-        }
-    }
-
-    pub fn combination(&self) -> usize {
-        self.polarity as usize + self.axis as usize * Polarity::COUNT
-    }
-
-    #[inline]
-    pub const fn count() -> usize {
-        Polarity::COUNT * Axis::COUNT
-    }
-}
-
-impl Axis {
-    pub fn rotate_dimensions(&self, dimensions: [usize; Axis::COUNT]) -> [usize; Axis::COUNT] {
-        let [x, y, z] = dimensions;
-        match self {
-            Axis::X => [x, z, y],
-            Axis::Y => [z, y, x],
-            Axis::Z => [y, x, z],
-        }
-    }
-
-    pub fn cross(&self, other: Self) -> Self {
-        match (self, other) {
-            (Axis::X, Axis::Y) | (Axis::Y, Axis::X) => Axis::Z,
-            (Axis::Y, Axis::Z) | (Axis::Z, Axis::Y) => Axis::X,
-            (Axis::Z, Axis::X) | (Axis::X, Axis::Z) => Axis::Y,
-            _ => unreachable!(),
-        }
-    }
+impl EnumCount for Orientation {
+    const COUNT: usize = Direction::COUNT * Rotation::COUNT;
 }

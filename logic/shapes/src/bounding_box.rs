@@ -1,33 +1,47 @@
-use orientation::{Axis, Direction};
+use colored::Colorize;
+use orientation::Axis;
 use strum::EnumCount;
 
+#[derive(Clone, Copy, Debug)]
 pub struct BoundingBox {
     pub start: [usize; Axis::COUNT],
     pub end: [usize; Axis::COUNT],
 }
 
 impl BoundingBox {
-    pub fn rotate(&self, along: Direction) -> Self {
-        let s = super::MAX_SIZE;
-
-        let rotated_start = along.rotate_coordinate(self.start, self.size());
-        let rotated_end = along.rotate_coordinate(self.end, self.size());
-
-        let mut start = [usize::MAX; Axis::COUNT];
-        let mut end = [usize::MIN; Axis::COUNT];
-
-        for axis in 0..Axis::COUNT {
-            start[axis] = rotated_start[axis].min(rotated_end[axis]);
-            end[axis] = rotated_start[axis].max(rotated_end[axis]);
-        }
-
-        Self { start, end }
-    }
-
     pub fn size(&self) -> [usize; Axis::COUNT] {
         let [start_x, start_y, start_z] = self.start;
         let [end_x, end_y, end_z] = self.end;
 
-        [end_x - start_x, end_y - start_y, end_z - start_z]
+        [
+            end_x - start_x + 1,
+            end_y - start_y + 1,
+            end_z - start_z + 1,
+        ]
+    }
+}
+
+impl ToString for BoundingBox {
+    fn to_string(&self) -> String {
+        let mut result = String::new();
+
+        for y in 0..super::MAX_SIZE {
+            result.push_str("\n");
+            result.push_str(&format!("Bounding box layer: {}", y));
+            for z in (0..super::MAX_SIZE).rev() {
+                result.push_str("\n");
+                for x in 0..super::MAX_SIZE {
+                    if self.start == [x, y, z] {
+                        result.push_str(&"  ".on_blue().to_string());
+                    } else if self.end == [x, y, z] {
+                        result.push_str(&"  ".on_green().to_string());
+                    } else {
+                        result.push_str(&"  ".on_truecolor(0, 0, 0).to_string())
+                    }
+                }
+            }
+        }
+
+        result
     }
 }
