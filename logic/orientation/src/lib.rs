@@ -33,20 +33,29 @@ mod tests {
 }
 
 impl Orientation {
-    pub fn rotate(&self, along: Direction) -> Self {
-        let cross = self.direction.cross(along);
+    pub fn rotate(&self, around: Direction) -> Self {
+        let cross = self.direction.cross(around);
 
         match cross {
-            Some(dir) => {
-                if dir.axis == Axis::Y {
-                    
-                }
+            Some(direction) => {
+                let rotation = if direction.axis == Axis::Y {
+                    match self.direction.axis {
+                        Axis::X => todo!(),
+                        Axis::Y => unreachable!(),
+                        Axis::Z => todo!(),
+                    }
+                } else {
+                    self.rotation
+                };
 
-                todo!()
+                Self {
+                    direction,
+                    rotation,
+                }
             }
             None => Self {
                 direction: self.direction,
-                rotation: match self.direction.polarity.cross(along.polarity) {
+                rotation: match self.direction.polarity.cross(around.polarity) {
                     Polarity::Positive => self.rotation.next(),
                     Polarity::Negative => self.rotation.previous(),
                 },

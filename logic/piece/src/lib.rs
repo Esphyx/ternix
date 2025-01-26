@@ -1,5 +1,5 @@
 use orientation::{Axis, Direction};
-use shapes::{Shape, ShapeId};
+use shapes::{Bitfield, Shape, ShapeId};
 use strum::EnumCount;
 use tetrominos::Tetromino;
 
@@ -29,9 +29,9 @@ impl Piece {
         let shape: &Shape = (&shape_id).into();
 
         let [_, end_y, _] = shape.bounding_box.end;
-        let [size_x, _, size_z] = shape.size();
+        let size = Bitfield::rotation_size(variant);
 
-        let [x, y, z] = [(W - size_x) / 2, H - end_y - 1, (D - size_z) / 2];
+        let [x, y, z] = [(W - size) / 2, H - end_y - 1, (D - size) / 2];
 
         Self {
             shape_id,

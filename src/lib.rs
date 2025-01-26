@@ -20,14 +20,14 @@ mod tests {
 
     #[test]
     pub fn it_works() {
-        let mut game_state = GameState::<6, 8, 6>::from(Queue::parse("[I]p1").unwrap());
+        let mut game_state = GameState::<5, 8, 5>::from(Queue::parse("[II]p2").unwrap());
 
         let start = std::time::Instant::now();
-        // println!("{:?}", game_state.piece.shape_id.orientation);
-        // game_state.perform(Action::Rotate {
-        //     direction: Direction::from((Polarity::Positive, Axis::Y)),
-        // });
-        // println!("{:?}", game_state.piece.shape_id.orientation);
+
+        game_state.perform(Action::HardDrop);
+        let direction = Direction::from((Polarity::Positive, Axis::X));
+        game_state.piece.position = [0, 1, 0];
+        game_state.perform(Action::Rotate { direction });
         game_state.perform(Action::HardDrop);
         let duration = start.elapsed();
 
@@ -130,6 +130,7 @@ impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
         let Shape {
             bitboards,
             bounding_box,
+            ..
         } = self.piece.shape();
         let [_, start_y, _] = bounding_box.start;
         let [_, end_y, _] = bounding_box.end;
@@ -165,6 +166,7 @@ impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
         let &Shape {
             bitboards,
             bounding_box,
+            ..
         } = shape;
 
         let BoundingBox { start, end } = bounding_box;

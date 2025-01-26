@@ -25,12 +25,12 @@ impl Direction {
 
         let [x, y, z] = coordinate;
 
-        // rotates counter clockwise while looking in the direction
+        // externally clockwise
         match (axis, polarity) {
             (Axis::X, Polarity::Positive) => [x, size - z - 1, y],
             (Axis::X, Polarity::Negative) => [x, z, size - y - 1],
-            (Axis::Y, Polarity::Positive) => [size - z - 1, y, x],
-            (Axis::Y, Polarity::Negative) => [z, y, size - x - 1],
+            (Axis::Y, Polarity::Positive) => [z, y, size - x - 1],
+            (Axis::Y, Polarity::Negative) => [size - z - 1, y, x],
             (Axis::Z, Polarity::Positive) => [size - y - 1, x, z],
             (Axis::Z, Polarity::Negative) => [y, size - x - 1, z],
         }
