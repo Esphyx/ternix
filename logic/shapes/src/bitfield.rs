@@ -5,7 +5,7 @@ use tetrominos::Tetromino;
 
 use crate::bounding_box::BoundingBox;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Bitfield {
     pub value: u64,
 }
@@ -51,14 +51,14 @@ impl Bitfield {
         }
     }
 
-    pub fn rotate(&self, along: Direction, size: usize) -> Self {
+    pub fn rotate(&self, around: Direction, size: usize) -> Self {
         let mut value = 0;
 
         for y in 0..FIELD_SIZE {
             for z in 0..FIELD_SIZE {
                 for x in 0..FIELD_SIZE {
                     if self.is_filled(x, y, z) {
-                        let [i, j, k] = along.rotate_coordinate([x, y, z], size);
+                        let [i, j, k] = around.rotate_coordinate([x, y, z], size);
                         value |= 1 << Self::index(i, j, k);
                     }
                 }

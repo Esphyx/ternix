@@ -2,7 +2,7 @@ use rand::Rng;
 use strum::{EnumCount, IntoEnumIterator};
 use tetrominos::Tetromino;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Pattern {
     pub tetromino_set: [usize; Tetromino::COUNT],
     pub draw_count: usize,

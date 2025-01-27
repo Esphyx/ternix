@@ -3,7 +3,7 @@ use strum::{EnumCount, IntoEnumIterator};
 use tetrominos::Tetromino;
 
 pub const MAX_SIZE: usize = 8;
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Layer<const W: usize, const D: usize> {
     pub bitboards: [u64; Tetromino::COUNT],
 }

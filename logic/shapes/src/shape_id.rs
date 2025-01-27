@@ -2,19 +2,19 @@ use orientation::{Direction, Orientation};
 use strum::EnumCount;
 use tetrominos::Tetromino;
 
-use super::{Shape, SHAPES};
+use crate::ROTATIONS;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct ShapeId {
     pub variant: Tetromino,
     pub orientation: Orientation,
 }
 
 impl ShapeId {
-    pub fn rotate(&self, along: Direction) -> Self {
+    pub fn rotate(&self, around: Direction) -> Self {
         Self {
             variant: self.variant,
-            orientation: self.orientation.rotate(along),
+            orientation: ROTATIONS[self.orientation.rotation_combination(around)],
         }
     }
 

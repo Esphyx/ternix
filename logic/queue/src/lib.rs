@@ -8,7 +8,7 @@ mod pattern;
 pub use parsing::Parsing;
 pub use pattern::Pattern;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Hash, PartialEq, Eq)]
 pub struct Queue {
     pub sequence: VecDeque<Pattern>,
     pub hold: Option<Tetromino>,

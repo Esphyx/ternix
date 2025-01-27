@@ -55,8 +55,8 @@ mod tests {
         let shape_id = ShapeId::from((
             variant,
             Orientation::from((
-                Direction::from((Polarity::Negative, Axis::Z)),
-                Rotation::Double,
+                Direction::from((Polarity::Negative, Axis::Y)),
+                Rotation::Prime,
             )),
         ));
 

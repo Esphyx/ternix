@@ -2,7 +2,7 @@ use strum::EnumCount;
 
 use super::{axis::Axis, polarity::Polarity};
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Direction {
     pub polarity: Polarity,
     pub axis: Axis,
@@ -14,6 +14,13 @@ impl Direction {
             polarity: self.polarity.cross(other.polarity),
             axis: self.axis.cross(other.axis)?,
         })
+    }
+
+    pub fn opposite(&self) -> Self {
+        Self {
+            axis: self.axis,
+            polarity: self.polarity.opposite(),
+        }
     }
 
     pub fn rotate_coordinate(
@@ -45,6 +52,12 @@ impl From<(Polarity, Axis)> for Direction {
     fn from(parameters: (Polarity, Axis)) -> Self {
         let (polarity, axis) = parameters;
         Self { polarity, axis }
+    }
+}
+
+impl Into<(Polarity, Axis)> for Direction {
+    fn into(self) -> (Polarity, Axis) {
+        (self.polarity, self.axis)
     }
 }
 

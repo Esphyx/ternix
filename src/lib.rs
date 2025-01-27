@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use action::Action;
 use colored::Colorize;
 use layer::Layer;
@@ -9,42 +11,73 @@ use strum::{EnumCount, IntoEnumIterator};
 use tetrominos::Tetromino;
 
 mod action;
+mod brute_forcing;
+mod heuristic;
 
 #[cfg(test)]
 mod tests {
 
-    use orientation::Polarity;
     use queue::Parsing;
+    use std::{collections::HashSet, time::Instant};
 
     use super::*;
 
     #[test]
-    pub fn it_works() {
-        let mut game_state = GameState::<5, 8, 5>::from(Queue::parse("[II]p2").unwrap());
+    pub fn heuristic_testing() {
+        let mut game_state = GameState::<4, 8, 4>::from(Queue::parse("[IIII]p4").unwrap());
+        game_state.perform(Action::HardDrop, true);
 
-        let start = std::time::Instant::now();
-
-        game_state.perform(Action::HardDrop);
-        let direction = Direction::from((Polarity::Positive, Axis::X));
-        game_state.piece.position = [0, 1, 0];
-        game_state.perform(Action::Rotate { direction });
-        game_state.perform(Action::HardDrop);
-        let duration = start.elapsed();
-
-        println!("Performing action took: {:?}", duration);
+        game_state.perform(Action::HardDrop, true);
         println!("{}", game_state.to_string());
+        println!("{}", game_state.heuristic());
+    }
+
+    #[test]
+    pub fn it_works() {
+        let start = Instant::now();
+        let game_state = GameState::<4, 8, 4>::default();
+
+        let mut map = HashSet::new();
+        let mut hashset_size = 0;
+        brute_forcing::algorithm(game_state, 200, &mut map, &mut hashset_size);
+
+        println!("{}", map.iter().collect::<Vec<_>>().len());
+
+        println!("Program took: {:?}", start.elapsed());
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GameState<const W: usize, const H: usize, const D: usize> {
+    history: Vec<Action>,
     queue: Queue,
     piece: Piece,
     playfield: [Layer<W, D>; H],
 }
 
 impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
-    pub fn perform(&mut self, action: Action) -> bool {
+    pub fn performable_actions(&mut self) -> Vec<Action> {
+        // TODO: rotating more than twice is not necessary
+        // TODO: just first try without softdropping
+
+        Action::get_all_actions()
+            .into_iter()
+            .filter(|&action| {
+                let last = 3;
+                let is_fine = if self.history.len() > last {
+                    self.history[self.history.len() - last..]
+                        .iter()
+                        .any(|&element| element == Action::HardDrop)
+                } else {
+                    true
+                };
+
+                self.perform(action, false) && is_fine
+            })
+            .collect()
+    }
+
+    pub fn perform(&mut self, action: Action, should_perform: bool) -> bool {
         match action {
             movement @ (Action::MoveForward
             | Action::MoveBackward
@@ -59,7 +92,8 @@ impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
                 };
 
                 let fits = self.fits(offset, None);
-                if fits {
+                if fits && should_perform {
+                    self.history.push(action);
                     self.piece.translate(offset)
                 }
                 fits
@@ -67,26 +101,32 @@ impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
             Action::SoftDrop => {
                 let offset = [0, -1, 0];
                 let fits = self.fits(offset, None);
-                if fits {
+                if fits && should_perform {
+                    self.history.push(action);
                     self.piece.translate(offset);
                 }
                 fits
             }
             Action::HardDrop => {
-                let offset = [0, -1, 0];
-                while self.fits(offset, None) {
-                    self.piece.translate(offset);
+                if should_perform {
+                    let offset = [0, -1, 0];
+                    while self.fits(offset, None) {
+                        self.piece.translate(offset);
+                    }
+                    self.place_piece();
+                    self.new_piece();
+                    self.clear_lines();
+                    self.history.push(action);
                 }
-                self.place_piece();
-                self.new_piece();
-                self.clear_lines();
                 true
             }
             Action::Rotate { direction } => {
-                // let fits = self.fits([0, 0, 0], Some(direction));
-                self.piece.rotate(direction);
-                // fits
-                true
+                let fits = self.fits([0, 0, 0], Some(direction));
+                if fits && should_perform {
+                    self.piece.rotate(direction);
+                    self.history.push(action);
+                }
+                fits
             }
         }
     }
@@ -105,7 +145,7 @@ impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
         }
     }
 
-    fn clear_lines(&mut self) {
+    fn clear_lines(&mut self) -> usize {
         let mut l = 0;
         let mut cleared_layer_count = 0;
         while l < H - cleared_layer_count {
@@ -122,6 +162,12 @@ impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
         for i in 0..cleared_layer_count {
             self.playfield[H - i - 1].clear();
         }
+
+        if cleared_layer_count >= 1 {
+            println!("{}", self.to_string());
+        }
+
+        cleared_layer_count
     }
 
     fn place_piece(&mut self) {
@@ -134,8 +180,6 @@ impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
         } = self.piece.shape();
         let [_, start_y, _] = bounding_box.start;
         let [_, end_y, _] = bounding_box.end;
-
-        println!("placing {:?} at {x},{y},{z}", self.piece.shape_id.variant); // TODO
 
         for i in start_y..=end_y {
             self.playfield[(y + i as isize) as usize].bitboards
@@ -227,24 +271,6 @@ impl<const W: usize, const H: usize, const D: usize> ToString for GameState<W, H
     }
 }
 
-/*
-
-impl<const W: usize, const H: usize, const D: usize> Display for GameState<W, H, D> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut output = String::new();
-
-        for (l, &layer) in self.playfield.iter().enumerate().rev() {
-            output.push_str(&format!("Layer {l}:\n"));
-            output.push_str(&layer.to_string());
-            output.push_str("\n");
-        }
-
-        f.write_str(&output)
-    }
-}
-
-
-*/
 impl<const W: usize, const H: usize, const D: usize> From<Queue> for GameState<W, H, D> {
     fn from(mut queue: Queue) -> Self {
         let variant = queue.next();
@@ -253,10 +279,19 @@ impl<const W: usize, const H: usize, const D: usize> From<Queue> for GameState<W
         let playfield = [Default::default(); H];
 
         Self {
+            history: Vec::new(),
             queue,
             piece,
             playfield,
         }
+    }
+}
+
+impl<const W: usize, const H: usize, const D: usize> Hash for GameState<W, H, D> {
+    fn hash<T: std::hash::Hasher>(&self, state: &mut T) {
+        self.queue.hash(state);
+        self.piece.hash(state);
+        self.playfield.hash(state);
     }
 }
 

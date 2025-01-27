@@ -3,7 +3,7 @@ use shapes::{Bitfield, Shape, ShapeId};
 use strum::EnumCount;
 use tetrominos::Tetromino;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Piece {
     pub shape_id: ShapeId,
     pub position: [isize; Axis::COUNT],

@@ -3,7 +3,7 @@ use std::ops::Add;
 use strum::EnumCount;
 use strum_macros::{EnumCount, EnumIter};
 
-#[derive(Clone, Copy, Debug, Default, EnumCount, EnumIter)]
+#[derive(Clone, Copy, Debug, Default, EnumCount, EnumIter, PartialEq, Eq, Hash)]
 pub enum Rotation {
     #[default]
     Identity,
@@ -35,23 +35,5 @@ impl Add for Rotation {
 impl Rotation {
     pub fn rotate_by(&self, count: isize) -> Self {
         Self::from(*self as isize + count)
-    }
-
-    pub fn next(&self) -> Self {
-        match self {
-            Rotation::Identity => Rotation::Generator,
-            Rotation::Generator => Rotation::Double,
-            Rotation::Double => Rotation::Prime,
-            Rotation::Prime => Rotation::Identity,
-        }
-    }
-
-    pub fn previous(&self) -> Self {
-        match self {
-            Rotation::Identity => Rotation::Prime,
-            Rotation::Generator => Rotation::Identity,
-            Rotation::Double => Rotation::Generator,
-            Rotation::Prime => Rotation::Double,
-        }
     }
 }
