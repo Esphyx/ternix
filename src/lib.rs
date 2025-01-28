@@ -165,6 +165,7 @@ impl<const W: usize, const H: usize, const D: usize> GameState<W, H, D> {
 
         if cleared_layer_count >= 1 {
             println!("{}", self.to_string());
+            panic!("")
         }
 
         cleared_layer_count
@@ -259,7 +260,7 @@ impl<const W: usize, const H: usize, const D: usize> ToString for GameState<W, H
                     }
 
                     if is_free {
-                        result.push_str(&"  ".on_truecolor(0, 0, 0).to_string());
+                        result.push_str(&"  ".on_truecolor(48, 48, 48).to_string());
                     }
                 }
                 result.push_str("  ");

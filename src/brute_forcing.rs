@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Duration};
 
 use crate::GameState;
 
@@ -30,8 +30,11 @@ pub fn algorithm<const W: usize, const H: usize, const D: usize>(
         return;
     }
 
-    println!("explored {size} states");
-    println!("{}", game_state.to_string());
+    // if *size % 50 == 0 {
+    //     print!("\x1B[2J\x1B[1;1H");
+    //     println!("{}", game_state.to_string());
+    //     println!("Explored {size} states");
+    // }
 
     memoization.insert(game_state.clone());
     *size += 1;

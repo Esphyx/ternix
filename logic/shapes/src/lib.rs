@@ -52,6 +52,8 @@ fn generate_rotations() -> [Orientation; Orientation::COUNT * Direction::COUNT] 
 }
 
 fn rotate(orientation: Orientation, around: Direction) -> Orientation {
+    
+
     let (polarity, axis, rotation) = match (
         orientation.direction.polarity,
         orientation.direction.axis,
